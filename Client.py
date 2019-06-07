@@ -24,54 +24,79 @@ class Client:
                 break
 
     def send(self, msg):
-        print(msg)
         self.socket.send(bytes(msg + "\n", "utf-8"))
-
-    def quit(self):
-        if self.connected:
-            self.socket.close()
-        self.gui.root.quit()
 
     def send_txt(self, event=None):
         msg = self.gui.s_msg.get()
         self.gui.s_msg.set("")
         self.send(msg)
 
-    def register(self):
+    def register(self, event=None):
         user_msg = "RegU" + self.gui.register_user_msg.get()
-        pw_msg = "RegU" + self.gui.register_pw_msg.get()
+        pw_msg = "RegP" + self.gui.register_pw_msg.get()
         self.send(user_msg)
-        self.send(pw_msg)
 
         received = self.socket.recv(1024).decode("utf-8")
-        if received == "Nutzername bereits vergeben":
+        if received == "error: username taken\n":
             self.gui.info_label_msg.set("Benutzername ist schon vergeben!")
-        else:
-            self.gui.info_label_msg.set("Erfolgreich! Bitte einloggen")
-            self.gui.register_user_msg.set("")
-            self.gui.register_pw_msg.set("")
+            return
+        elif self.gui.register_user_msg.get() == "":
+            self.gui.info_label_msg.set("Leeres Feld")
+            return
 
-    def login(self):
-        user_msg = "LoginU" + self.gui.login_user_msg.get()
-        pw_msg = "LoginU" + self.gui.login_pw_msg.get()
-        self.send(user_msg)
+        self.gui.info_label_msg.set(received)
         self.send(pw_msg)
-
         received = self.socket.recv(1024).decode("utf-8")
-        if received == "Nutzername oder Passwort falsch":
-            self.gui.login_user_msg.set("")
-            self.gui.login_pw_msg.set("")
-            self.gui.info_label_msg.set("Falsche Anmeldedaten!")
-        elif received == "LoginU"+"\n":
-            self.gui.login_user_msg.set("")
-            self.gui.login_pw_msg.set("")
-            self.gui.info_label_msg.set("Keine Leeren Felder!")
+        if self.gui.register_pw_msg.get() == "":
+            self.gui.info_label_msg.set("Leeres Feld")
         else:
-            print("angemeldet")
+            self.gui.info_label_msg.set(received)
             self.gui.root.deiconify()
             self.gui.top.destroy()
             self.thread = Thread(target=client.receive)
             self.thread.start()
+
+    def login(self, event=None):
+        user_msg = "LoginU" + self.gui.login_user_msg.get()
+        pw_msg = "LoginP" + self.gui.login_pw_msg.get()
+
+        self.send(user_msg)
+        received = self.socket.recv(1024).decode("utf-8")
+        if received == "error: username empty\n":
+            self.gui.login_user_msg.set("")
+            self.gui.login_pw_msg.set("")
+            self.gui.info_label_msg.set(received)
+            return
+        elif received == "error: username not found\n":
+            self.gui.login_user_msg.set("")
+            self.gui.login_pw_msg.set("")
+            self.gui.info_label_msg.set(received)
+            return
+        elif received == "unknown command\n":
+            self.gui.info_label_msg.set(received)
+            return
+
+        self.send(pw_msg)
+        received = self.socket.recv(1024).decode("utf-8")
+        if received == "error: password empty\n":
+            self.gui.login_user_msg.set("")
+            self.gui.login_pw_msg.set("")
+            self.gui.info_label_msg.set(received)
+        elif received == "error: password wrong\n":
+            self.gui.login_user_msg.set("")
+            self.gui.login_pw_msg.set("")
+            self.gui.info_label_msg.set(received)
+        else:
+            print(received)
+            self.gui.root.deiconify()
+            self.gui.top.destroy()
+            self.thread = Thread(target=client.receive)
+            self.thread.start()
+
+    def quit(self):
+        if self.connected:
+            self.socket.close()
+        self.gui.root.quit()
 
     def logout(self):
         self.send("end")
@@ -80,10 +105,8 @@ class Client:
         sys.exit(0)
 
 
-
 if __name__ == "__main__":
     client = Client("localhost", 27999)
-
     mainloop()
 
 

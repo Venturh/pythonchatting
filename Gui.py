@@ -6,9 +6,11 @@ class Gui(object):
     def __init__(self,client):
         self.client = client
         self.root = Tk()
+        self.root.geometry("%dx%d%+d%+d" % (200, 600, 800, 125))
         self.root.withdraw()
+
         self.top = Toplevel()
-        self.top.geometry("%dx%d%+d%+d" % (300, 300, 250, 125))
+        self.top.geometry("%dx%d%+d%+d" % (300, 300, 800, 125))
 
         self.register_label = Label(self.top, text="Register here:")
         self.register_user_msg = StringVar()
@@ -25,7 +27,6 @@ class Gui(object):
         self.login_user = Entry(self.top, textvariable=self.login_user_msg)
         self.login_pw = Entry(self.top, textvariable=self.login_pw_msg)
         self.login_btn = Button(self.top, text="Login", command=self.login)
-
 
         self.close_btn = Button(self.top, text="Close", command=self.close_top)
 
@@ -63,11 +64,9 @@ class Gui(object):
         sys.exit()
 
     def register(self):
-        print("registered")
         self.client.register()
 
     def login(self):
-        print("login")
         self.client.login()
 
 
