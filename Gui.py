@@ -29,19 +29,23 @@ class Gui(object):
         self.login_btn = Button(self.top, text="Login", command=self.login)
 
         self.close_btn = Button(self.top, text="Close", command=self.close_top)
-
         self.register_label.pack()
         self.register_user.pack()
         self.register_pw.pack()
         self.register_btn.pack()
         self.info_label.pack()
-
         self.login_label.pack()
         self.login_user.pack()
         self.login_pw.pack()
         self.login_btn.pack()
-
         self.close_btn.pack()
+
+
+        self.userlist_box = Frame()
+        self.userlist = Listbox(self.userlist_box)
+        self.userlist_box.pack()
+        self.userlist.pack()
+
 
         self.chat_box = Frame()
 
