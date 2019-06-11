@@ -5,9 +5,8 @@ from Udp import Udp
 from Tcp import Tcp
 from threading import *
 
-#BUGS:
-# Regristrieren probleme mit List
-# Liste refreshen probleme
+# BUGS:
+
 
 class Client(object):
 
@@ -35,21 +34,19 @@ class Client(object):
         self.udp.connect()
 
     def quit(self):
-        self.tcp.tcp_socket.close()
+        self.tcp.socket.close()
         self.gui.root.quit()
 
     def logout(self):
-        self.tcp.tcp_socket.close()
+        self.tcp.socket.close()
         self.udp.clientSocket.close()
         self.udpServer.socket.close()
         self.gui.root.destroy()
         sys.exit(0)
 
 
-if __name__ == "__main__":
-    client = Client()
-    client.udpServer.udpserver_thread.start()
-    mainloop()
+client = Client()
+mainloop()
 
 
 

@@ -1,6 +1,7 @@
 from socket import *
 from threading import Thread
 
+
 class Udp(object):
 
     def __init__(self, client):
@@ -11,7 +12,6 @@ class Udp(object):
         self.clientSocket.connect((self.serverName,self.serverPort))
         self.partnerAdress = ("", 0)
         self.thread = Thread(target=self.receive).start()
-
 
     def send(self,msg):
         message = bytes(self.client.tcp.username+": " + msg, "utf-8")
@@ -26,7 +26,6 @@ class Udp(object):
     def receive(self):
         while 1:
             msg, serverAddress = self.clientSocket.recvfrom(2048)
-            print("Empfangen: " + str(msg, "utf-8"))
             self.client.gui.update_msg_list(msg)
 
     def getPartnerAdress(self):

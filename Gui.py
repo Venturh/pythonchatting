@@ -50,8 +50,6 @@ class Gui(object):
         self.userlist_btn.pack()
         self.userlist_refresh_btn.pack()
 
-
-
         self.chat_box = Frame()
         self.s_msg = StringVar()
         self.msg_list = Listbox(self.chat_box, height=30, width=80)
@@ -70,10 +68,13 @@ class Gui(object):
 
 
         self.chatrequest_window = Toplevel()
-        self.chatrequest_window.geometry("%dx%d%+d%+d" % (100, 50, 800, 125))
-        self.chatrequest_accept_btn = Button(text="Accept", command=lambda: self.client.tcp.send_chatanswer("accept"))
-        self.chatrequest_decline_btn = Button(text="Decline", command=lambda: self.client.tcp.send_chatanswer("decline"))
+        self.chatrequest_window.geometry("%dx%d%+d%+d" % (50, 50, 800, 200))
+        self.chatrequest_accept_btn = Button(self.chatrequest_window, text="Accept", command=lambda: self.client.tcp.send_chatanswer("accept"))
+        self.chatrequest_decline_btn = Button(self.chatrequest_window, text="Decline", command=lambda: self.client.tcp.send_chatanswer("decline"))
+        self.chatrequest_accept_btn.pack()
+        self.chatrequest_decline_btn.pack()
         self.chatrequest_window.withdraw()
+
 
     def close_top(self):
         self.top.destroy()
@@ -86,7 +87,7 @@ class Gui(object):
         self.client.tcp.login()
 
     def refresh_user_list(self):
-        self.userlist.delete(1, END)
+        self.userlist.delete(0, END)
         self.client.tcp.users_list()
 
     def update_msg_list(self, msg):

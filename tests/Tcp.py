@@ -1,88 +1,86 @@
 from socket import AF_INET, socket, SOCK_STREAM, SOCK_DGRAM
 from threading import Thread
 
+
 class Tcp(object):
 
     def __init__(self, tcp_server, tcp_port, client):
         self.client = client
-        self.tcp_server = tcp_server
-        self.tcp_port = tcp_port
-        self.tcp_socket = socket(AF_INET, SOCK_STREAM)
-        self.tcp_socket.connect((self.tcp_server, self.tcp_port))
+        self.serverName = tcp_server
+        self.serverPort = tcp_port
+        self.socket = socket(AF_INET, SOCK_STREAM)
+        self.socket.connect((self.serverName, self.serverPort))
         self.username = ""
-        self.passwort = ""
-        self.received = ""
         self.thread = Thread(target=self.receive).start()
 
-    def send_tcp(self, msg):
+    def send(self, msg):
         print("Send:" + msg)
-        self.tcp_socket.send(bytes(msg + "\n", "utf-8"))
+        self.socket.send(bytes(msg + "\n", "utf-8"))
 
     def receive(self):
         while 1:
-            self.received = self.tcp_socket.recv(1024).decode("utf-8")
-            self.handle()
+            received = self.socket.recv(1024).decode("utf-8")
+            self.handle(received)
 
-    def handle(self):
-        print("handle: "+self.received)
-        if self.received == "43\n" or self.received == "44\n":
-            self.client.gui.info_label_msg.set("Benutzername ist schon vergeben!")
-        elif self.received == "41\n":
-            self.client.gui.info_label_msg.set("Leeres Feld")
-            return
-        elif self.received == "40\n":
+    def handle(self, received):
+        print("handle: "+received)
+        if received.startswith("10"):
+            users = received.replace("\n", "").split("*")
+            users.pop(0)
+            for user in users:
+                if user != self.username:
+                    self.client.gui.update_users_list(user)
+        elif received == "12\n":
+            self.username = self.client.gui.login_user_msg.get()
+            pw_msg = "LoginP" + self.client.gui.login_pw_msg.get()
+            self.send(pw_msg)
+        elif received == "13\n":
+            self.username = self.client.gui.register_user_msg.get()
+            pw_msg = "RegP" + self.client.gui.register_pw_msg.get()
+            self.send(pw_msg)
+        elif received == "14\n":
+            self.complete_tcp()
+        elif received == "15\n":
+            self.complete_tcp()
+        elif received == "40\n":
             self.client.gui.info_label_msg.set("Fehler")
-        elif self.received == "42\n":
+        elif received == "41\n":
+            self.client.gui.info_label_msg.set("Leeres Feld")
+        elif received == "42\n":
             self.client.gui.login_user_msg.set("")
             self.client.gui.login_pw_msg.set("")
             self.client.gui.info_label_msg.set("Benutzername nicht gefunden")
-        elif self.received == "40\n":
-            self.client.gui.info_label_msg.set("Fehler")
-        elif self.received == "45\n":
+        elif received == "43\n" or received == "44\n":
+            self.client.gui.info_label_msg.set("Benutzername ist schon vergeben!")
+        elif received == "45\n":
             self.client.gui.login_user_msg.set("")
             self.client.gui.login_pw_msg.set("")
             self.client.gui.info_label_msg.set("Falsches Passwort")
-        elif self.received == "14\n":
-            self.complete_tcp()
-            return
-        elif self.received == "15\n":
-            self.complete_tcp()
+        elif received == "00\n":
+            self.client.gui.chatrequest_window.deiconify()
+
 
     def register(self, event=None):
         user_msg = "RegU" + self.client.gui.register_user_msg.get()
-        pw_msg = "RegP" + self.client.gui.register_pw_msg.get()
-        self.send_tcp(user_msg)
-        self.send_tcp(pw_msg)
-
+        self.send(user_msg)
 
     def login(self, event=None):
         user_msg = "LoginU" + self.client.gui.login_user_msg.get()
-        pw_msg = "LoginP" + self.client.gui.login_pw_msg.get()
-        self.send_tcp(user_msg)
-        self.send_tcp(pw_msg)
+        self.send(user_msg)
 
     def complete_tcp(self):
-        self.username = self.client.gui.login_user_msg.get()
         self.client.gui.root.deiconify()
         self.client.gui.top.destroy()
         self.users_list()
 
     def users_list(self):
-        self.send_tcp("10")
-        rec = self.tcp_socket.recv(1024).decode("utf-8")
-        print(str(rec))
-        users = rec.replace("\n", "").split("*")
-        print(users)
-        for user in users:
-            if user != self.username and user != "10":
-                self.client.gui.update_users_list(user)
+        self.send("10")
 
     def send_chatrequest(self):
-        print("Chatanfage an: "+self.client.chatPartner)
-        self.send_tcp("Chat"+ self.client.chatPartner)
-
+        # print("Chatanfage an: "+self.client.chatPartner)
+        self.send("Chat" + self.client.chatPartner)
 
     def send_chatanswer(self,answer):
         print(answer)
-        self.send_tcp(answer)
+        self.send(answer)
         return
