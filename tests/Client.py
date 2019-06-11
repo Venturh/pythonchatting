@@ -5,9 +5,6 @@ from Udp import Udp
 from Tcp import Tcp
 from threading import *
 
-#BUGS:
-# Regristrieren probleme mit List
-# Liste refreshen probleme
 
 class Client(object):
 
@@ -15,7 +12,7 @@ class Client(object):
         self.gui = Gui(self)
         self.tcp = Tcp("localhost", 27999, self)
         self.udp = Udp(self)
-        self.udpServer = UdpServer(self)
+
 
     def send_udp_txt(self):
         msg = self.gui.s_msg.get()
@@ -44,7 +41,6 @@ class Client(object):
 
 if __name__ == "__main__":
     client = Client()
-    client.udpServer.udpserver_thread.start()
     mainloop()
 
 

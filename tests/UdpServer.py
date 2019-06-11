@@ -9,7 +9,7 @@ class UdpServer:
         #self.port = self.generatePort()
         self.client = client
         self.name = "localhost"
-        self.port = 12000
+        self.port = 12001
         self.socket = socket(AF_INET, SOCK_DGRAM)
         self.socket.bind(("", self.port))
         self.clients = []
@@ -34,7 +34,6 @@ class UdpServer:
                 for c in self.clients:
                     print(self.client.tcp.username + str(c))
                     self.socket.sendto(message, c)
-
 
 
 
