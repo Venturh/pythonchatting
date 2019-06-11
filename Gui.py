@@ -44,7 +44,7 @@ class Gui(object):
         self.userlist_box = Frame()
         self.userlist = Listbox(self.userlist_box, selectmode ="browse")
         self.userlist_refresh_btn = Button(text="Refresh", command =self.refresh_user_list)
-        self.userlist_btn = Button(text="Chatten", command =self.client.choose_chat)
+        self.userlist_btn = Button(text="Chatten", command=self.client.choose_chat)
         self.userlist_box.pack()
         self.userlist.pack()
         self.userlist_btn.pack()
@@ -67,6 +67,13 @@ class Gui(object):
         self.send_button.pack()
         self.logout_button.pack()
         self.chat_box.pack_forget()
+
+
+        self.chatrequest_window = Toplevel()
+        self.chatrequest_window.geometry("%dx%d%+d%+d" % (100, 50, 800, 125))
+        self.chatrequest_accept_btn = Button(text="Accept", command=lambda: self.client.tcp.send_chatanswer("accept"))
+        self.chatrequest_decline_btn = Button(text="Decline", command=lambda: self.client.tcp.send_chatanswer("decline"))
+        self.chatrequest_window.withdraw()
 
     def close_top(self):
         self.top.destroy()
