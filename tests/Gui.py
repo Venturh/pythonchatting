@@ -8,7 +8,7 @@ class Gui(object):
         self.root = Tk()
         self.root.geometry("%dx%d%+d%+d" % (200, 800, 800, 125))
         self.root.withdraw()
-        self.root.title("Chat")
+        self.root.title("Test")
 
         self.top = Toplevel()
         self.top.geometry("%dx%d%+d%+d" % (300, 300, 800, 125))

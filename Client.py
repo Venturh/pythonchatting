@@ -18,10 +18,10 @@ class Client(object):
 
         self.chatPartner = "";
 
-    def send_udp_txt(self):
+    def send_udp_txt(self, event=None):
         msg = self.gui.s_msg.get()
         self.gui.s_msg.set("")
-        self.udp.send(msg)
+        self.udp.send(msg, 0)
 
     def choose_chat(self):
         choose_list = self.gui.userlist.curselection()
