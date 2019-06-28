@@ -14,6 +14,8 @@ class Udp(object):
         self.messages = []
         self.thread = Thread(target=self.receive).start()
 
+
+
     def send(self, msg, seq):
         self.clientSocket.settimeout(2.0);
         message = bytes(self.client.tcp.username + ": " + ":|:" + msg + ":|:" + str(seq), "utf-8")
@@ -22,8 +24,6 @@ class Udp(object):
         except timeout as err:
             print(err)
             self.send(msg, seq + 1)
-        finally:
-            self.clientSocket.settimeout(None);
 
     def connect(self):
         self.clientSocket.settimeout(2.0);
@@ -31,17 +31,23 @@ class Udp(object):
 
     def receive(self):
         while 1:
-            msg, clientAddress = self.clientSocket.recvfrom(2048)
-            user, message, seq = self.decode_split(msg)
-            self.messages.append((user, message, seq))
-            print("Seq: "+seq)
-            if int(seq) > 0:
-                for u, m, s in self.messages:
-                    if s >= int(seq) and message == m:
-                        print("Duplikat")
-                        #muss noch gesendet werden oder nicht?
-                        #self.send(user, "duplikat, 0, c")
-            self.client.gui.update_msg_list(user + message)
+            try:
+                self.clientSocket.settimeout(None);
+                msg, clientAddress = self.clientSocket.recvfrom(2048)
+                user, message, seq = self.decode_split(msg)
+                self.messages.append((user, message, seq))
+                print("Seq: " + seq)
+                if int(seq) > 0:
+                    for u, m, s in self.messages:
+                        if s >= int(seq) and message == m:
+                            print("Duplikat")
+                            # muss noch gesendet werden oder nicht?
+                            # self.send(user, "duplikat, 0, c")
+                self.client.gui.update_msg_list(user + message)
+            except timeout:
+                print("timout")
+                continue;
+
 
     def decode_split(self,msg):
         message = str(msg, "utf-8")

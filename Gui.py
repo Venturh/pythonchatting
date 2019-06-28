@@ -4,14 +4,15 @@ import sys
 
 class Gui(object):
     def __init__(self,client):
+
         self.client = client
         self.root = Tk()
-        self.root.geometry("%dx%d%+d%+d" % (200, 800, 800, 125))
+        self.root.geometry("%dx%d%+d%+d" % (200, 400, 1000, 200))
         self.root.withdraw()
         self.root.title("Chat")
 
         self.top = Toplevel()
-        self.top.geometry("%dx%d%+d%+d" % (300, 300, 800, 125))
+        self.top.geometry("%dx%d%+d%+d" % (300, 300, 1000, 200))
 
         self.register_label = Label(self.top, text="Register here:")
         self.register_user_msg = StringVar()
@@ -42,30 +43,18 @@ class Gui(object):
         self.close_btn.pack()
 
         self.userlist_box = Frame()
-        self.userlist = Listbox(self.userlist_box, selectmode ="browse")
+        self.userlist = Listbox(self.userlist_box, selectmode="browse", height=20)
         self.userlist_refresh_btn = Button(text="Refresh", command =self.refresh_user_list)
         self.userlist_btn = Button(text="Chatten", command=self.client.choose_chat)
+
+        scrollbar = Scrollbar(self.userlist_box, orient="vertical")
+        scrollbar.config(command=self.userlist.yview)
+        scrollbar.pack(side="right", fill="y")
+
         self.userlist_box.pack()
         self.userlist.pack()
         self.userlist_btn.pack()
         self.userlist_refresh_btn.pack()
-
-        self.chat_box = Frame()
-        self.s_msg = StringVar()
-        self.msg_list = Listbox(self.chat_box, height=30, width=80)
-        self.chat_msg = Entry(self.chat_box, textvariable=self.s_msg)
-        self.send_button = Button(self.chat_box, text="Senden", command=self.client.send_udp_txt)
-        self.logout_button = Button(text="Ausloggen", command=self.client.logout)
-
-        self.root.protocol('WM_DELETE_WINDOW', self.client.quit)
-        self.msg_list.pack(fill=BOTH)
-        self.chat_box.pack()
-        self.chat_msg.bind("<Return>", self.client.send_udp_txt)
-        self.chat_msg.pack(fill=X)
-        self.send_button.pack()
-        self.logout_button.pack()
-        self.chat_box.pack_forget()
-
 
         self.chatrequest_window = Toplevel()
         self.chatrequest_window.geometry("%dx%d%+d%+d" % (50, 50, 800, 200))
@@ -75,13 +64,34 @@ class Gui(object):
         self.chatrequest_decline_btn.pack()
         self.chatrequest_window.withdraw()
 
+        self.chat_window = Toplevel()
+        self.chat_window.geometry("%dx%d%+d%+d" % (800, 600, 800, 200))
+        self.chat_box = Frame(self.chat_window)
+        self.s_msg = StringVar()
+        self.msg_list = Listbox(self.chat_box, height=34, width=120)
+        self.chat_msg = Entry(self.chat_box, textvariable=self.s_msg)
+        self.send_button = Button(self.chat_box, text="Senden", command=self.client.send_udp_txt)
+        self.hidechat_btn = Button(self.chat_box, text="Zurück", command=self.hide_chat_window)
+
+        scrollbar = Scrollbar(self.chat_box, orient="vertical")
+        scrollbar.config(command=self.msg_list.yview)
+        scrollbar.pack(side="right", fill="y")
+        self.chat_box.pack()
+        self.chat_window.withdraw()
+
+        self.msg_list.pack(fill=X)
+        self.chat_msg.bind("<Return>", self.client.send_udp_txt)
+        self.chat_msg.pack(fill=X)
+        self.hidechat_btn.pack(side=LEFT)
+        self.send_button.pack(side=RIGHT)
+
+
         self.login_user_msg.set("Max")
         self.login_pw_msg.set("hallo")
 
 
     def close_top(self):
         self.top.destroy()
-        sys.exit()
 
     def register(self):
         self.client.tcp.register()
@@ -94,10 +104,27 @@ class Gui(object):
         self.client.tcp.users_list()
 
     def update_msg_list(self, msg):
-        self.msg_list.insert(END, msg)
+        print(len(msg))
+        m = 125
+        if len(msg) >= m:
+            message = [msg[i: i + m] for i in range(0, len(msg), m)]
+            for e in message:
+                self.msg_list.insert(END, e)
+        else:
+            self.msg_list.insert(END, msg)
 
     def update_users_list(self, user):
         self.userlist.insert(END, user)
+
+    def show_chat_window(self):
+        self.root.withdraw()
+        self.chat_window.deiconify()
+
+    def hide_chat_window(self):
+        self.root.deiconify()
+        self.chat_window.withdraw()
+
+
 
 
 

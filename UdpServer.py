@@ -29,30 +29,31 @@ class UdpServer:
         except timeout as err:
             print(err)
             self.send(msg,int(seq)+1)
-        finally:
-            self.socket.settimeout(None);
 
     def handle(self):
         while 1:
-            msg, clientAddress = self.socket.recvfrom(2048)
-            user, message, seq = self.client.udp.decode_split(msg)
-            self.messages.append((user, message, seq))
-            print("Seq: "+seq)
-            if int(seq) > 0:
-                for u, m, s in self.messages:
-                    if s < int(seq) and message == m:
-                        print("Duplikat")
-                        self.messages.remove((u, m, s))
-                        #muss noch gesendet werden oder nicht?
-                        #self.send(user, "duplikat, 0, c")
+            try:
+                msg, clientAddress = self.socket.recvfrom(2048)
+                user, message, seq = self.client.udp.decode_split(msg)
+                self.messages.append((user, message, seq))
+                print("Seq: " + seq)
+                if int(seq) > 0:
+                    for u, m, s in self.messages:
+                        if s < int(seq) and message == m:
+                            print("Duplikat")
+                            self.messages.remove((u, m, s))
+                            # muss noch gesendet werden oder nicht?
+                            # self.send(user, "duplikat, 0, c")
 
-            if message == "connect":
-                if clientAddress not in self.clients:
-                    self.clients.append(clientAddress)
-            else:
-                for c in self.clients:
-                    print(str(c))
-                    self.send(user, message, 0, c)
+                if message == "connect":
+                    if clientAddress not in self.clients:
+                        self.clients.append(clientAddress)
+                else:
+                    for c in self.clients:
+                        print(str(c))
+                        self.send(user, message, 0, c)
+            except timeout:
+                continue
 
 
 

@@ -57,7 +57,15 @@ class Tcp(object):
             self.client.gui.login_pw_msg.set("")
             self.client.gui.info_label_msg.set("Falsches Passwort")
         elif received == "00\n":
-            self.client.gui.chatrequest_window.deiconify()
+            #self.client.gui.chatrequest_window.deiconify()
+            self.client.gui.show_chat_window()
+        elif received == "ChatAnfrage erhalten\n":
+            #self.client.gui.chatrequest_window.deiconify()
+            self.client.gui.show_chat_window()
+        elif received == "ChatAnfrageAntwort erhalten\n":
+            #self.client.gui.chatrequest_window.deiconify()
+            self.client.gui.show_chat_window()
+
 
 
     def register(self, event=None):

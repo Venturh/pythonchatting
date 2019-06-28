@@ -15,7 +15,6 @@ class Client(object):
         self.tcp = Tcp("localhost", 27999, self)
         self.udp = Udp(self)
         self.udpServer = UdpServer(self)
-
         self.chatPartner = "";
 
     def send_udp_txt(self, event=None):
@@ -29,7 +28,6 @@ class Client(object):
         choosed = self.gui.userlist.get(item)
         self.chatPartner = choosed;
         print(choosed)
-        self.gui.chat_box.pack()
         self.tcp.send_chatrequest()
         self.udp.connect()
 
