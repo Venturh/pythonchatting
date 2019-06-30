@@ -1,3 +1,4 @@
+import hashlib
 from socket import AF_INET, socket, SOCK_STREAM, SOCK_DGRAM
 from threading import Thread
 
@@ -11,14 +12,15 @@ class Tcp(object):
         self.socket = socket(AF_INET, SOCK_STREAM)
         self.socket.connect((self.serverName, self.serverPort))
         self.username = ""
-        self.thread = Thread(target=self.receive).start()
+        self.thread = Thread(target=self.receive)
+        self.run = True
 
     def send(self, msg):
         print("Send:" + msg)
         self.socket.send(bytes(msg + "\n", "utf-8"))
 
     def receive(self):
-        while 1:
+        while self.run:
             received = self.socket.recv(1024).decode("utf-8")
             self.handle(received)
 

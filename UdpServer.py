@@ -14,7 +14,7 @@ class UdpServer:
         self.socket.bind(("", self.port))
         self.clients = []
         self.messages = []
-        self.udpserver_thread = Thread(target=self.handle).start()
+        self.udpserver_thread = Thread(target=self.handle)
         print("UDP Server läuft mit Port: " + str(self.port))
 
     def generatePort(self):
@@ -30,28 +30,45 @@ class UdpServer:
             print(err)
             self.send(msg,int(seq)+1)
 
+    def broadcast(self, user, message):
+        for c in self.clients:
+            print(str(c))
+            self.send(user, message, 0, c)
+
+    def close(self):
+        print("Server geschlossen")
+
+
+
     def handle(self):
         while 1:
+            print("läuft")
             try:
                 msg, clientAddress = self.socket.recvfrom(2048)
                 user, message, seq = self.client.udp.decode_split(msg)
                 self.messages.append((user, message, seq))
                 print("Seq: " + seq)
                 if int(seq) > 0:
+                    seqMin = 0
                     for u, m, s in self.messages:
-                        if s < int(seq) and message == m:
-                            print("Duplikat")
+                        if u == user and message == m and s <= seqMin:
+                            seqMin = s
+                    for u, m, s in self.messages:
+                        if s > seqMin:
                             self.messages.remove((u, m, s))
-                            # muss noch gesendet werden oder nicht?
-                            # self.send(user, "duplikat, 0, c")
+                            print("Duplikat")
+                            return
 
                 if message == "connect":
                     if clientAddress not in self.clients:
                         self.clients.append(clientAddress)
+                elif message == "disconnect":
+                    if clientAddress in self.clients:
+                        self.clients.remove(clientAddress)
+                        self.broadcast(user, message)
                 else:
-                    for c in self.clients:
-                        print(str(c))
-                        self.send(user, message, 0, c)
+                    self.broadcast(user, message)
+
             except timeout:
                 continue
 

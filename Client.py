@@ -22,6 +22,7 @@ class Client(object):
         self.gui.s_msg.set("")
         self.udp.send(msg, 0)
 
+
     def choose_chat(self):
         choose_list = self.gui.userlist.curselection()
         item = choose_list[0]
@@ -32,19 +33,20 @@ class Client(object):
         self.udp.connect()
 
     def quit(self):
-        self.tcp.socket.close()
-        self.gui.root.quit()
-
-    def logout(self):
-        self.tcp.socket.close()
+        self.tcp.thread.join()
+        self.tcp.socket.detach()
+        self.udp.thread.join()
         self.udp.clientSocket.close()
-        self.udpServer.socket.close()
-        self.gui.root.destroy()
-        sys.exit(0)
+        self.udpServer.udpserver_thread.join()
+        self.udpServer.close()
 
 
-client = Client()
-mainloop()
+if __name__ == "__main__":
+    client = Client()
+    client.tcp.thread.start()
+    client.udp.thread.start()
+    client.udpServer.udpserver_thread.start()
+    mainloop()
 
 
 

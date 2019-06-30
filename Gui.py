@@ -1,4 +1,5 @@
 from tkinter import *
+from threading import Thread
 import sys
 
 
@@ -30,7 +31,7 @@ class Gui(object):
         self.login_pw = Entry(self.top, textvariable=self.login_pw_msg)
         self.login_btn = Button(self.top, text="Login", command=self.login)
 
-        self.close_btn = Button(self.top, text="Close", command=self.close_top)
+        self.close_btn = Button(self.top, text="Close", command=self.close)
         self.register_label.pack()
         self.register_user.pack()
         self.register_pw.pack()
@@ -71,7 +72,7 @@ class Gui(object):
         self.msg_list = Listbox(self.chat_box, height=34, width=120)
         self.chat_msg = Entry(self.chat_box, textvariable=self.s_msg)
         self.send_button = Button(self.chat_box, text="Senden", command=self.client.send_udp_txt)
-        self.hidechat_btn = Button(self.chat_box, text="Zurück", command=self.hide_chat_window)
+        self.hidechat_btn = Button(self.chat_box, text="Ende", command=self.hide_chat_window)
 
         scrollbar = Scrollbar(self.chat_box, orient="vertical")
         scrollbar.config(command=self.msg_list.yview)
@@ -85,13 +86,11 @@ class Gui(object):
         self.hidechat_btn.pack(side=LEFT)
         self.send_button.pack(side=RIGHT)
 
+        self.root.protocol("WM_DELETE_WINDOW", self.close)
 
         self.login_user_msg.set("Max")
         self.login_pw_msg.set("hallo")
 
-
-    def close_top(self):
-        self.top.destroy()
 
     def register(self):
         self.client.tcp.register()
@@ -121,8 +120,19 @@ class Gui(object):
         self.chat_window.deiconify()
 
     def hide_chat_window(self):
+        self.client.udp.disconnect()
+        self.msg_list.delete(0, END)
         self.root.deiconify()
         self.chat_window.withdraw()
+
+    def close(self):
+        test = Thread(target=self.client.quit)
+        test.start()
+        self.top.destroy()
+        self.chat_window.destroy()
+        self.chatrequest_window.destroy()
+        self.root.destroy()
+        test.join()
 
 
 

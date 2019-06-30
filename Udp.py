@@ -12,7 +12,7 @@ class Udp(object):
         self.clientSocket.connect((self.serverName,self.serverPort))
         self.partnerAdress = ("", 0)
         self.messages = []
-        self.thread = Thread(target=self.receive).start()
+        self.thread = Thread(target=self.receive)
 
 
 
@@ -29,23 +29,33 @@ class Udp(object):
         self.clientSocket.settimeout(2.0);
         self.send("connect", 0)
 
+    def disconnect(self):
+        self.clientSocket.settimeout(2.0);
+        self.send("disconnect", 0)
+
     def receive(self):
         while 1:
             try:
-                self.clientSocket.settimeout(None);
                 msg, clientAddress = self.clientSocket.recvfrom(2048)
                 user, message, seq = self.decode_split(msg)
                 self.messages.append((user, message, seq))
+                print(message)
                 print("Seq: " + seq)
                 if int(seq) > 0:
+                    seqMin = 0
                     for u, m, s in self.messages:
-                        if s >= int(seq) and message == m:
+                        if u == user and message == m and s <= seqMin:
+                            seqMin = s
+                    for u, m, s in self.messages:
+                        if s > seqMin:
+                            self.messages.remove((u, m, s))
                             print("Duplikat")
-                            # muss noch gesendet werden oder nicht?
-                            # self.send(user, "duplikat, 0, c")
-                self.client.gui.update_msg_list(user + message)
+                            return
+                if message == "disconnect":
+                    self.client.gui.update_msg_list("Dein Chatpartner " + user + "hat den Chat verlassen")
+                else:
+                    self.client.gui.update_msg_list(user + message)
             except timeout:
-                print("timout")
                 continue;
 
 

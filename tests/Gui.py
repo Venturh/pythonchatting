@@ -75,6 +75,9 @@ class Gui(object):
         self.chatrequest_decline_btn.pack()
         self.chatrequest_window.withdraw()
 
+        self.login_user_msg.set("Test")
+        self.login_pw_msg.set("1234")
+
 
     def close_top(self):
         self.top.destroy()
