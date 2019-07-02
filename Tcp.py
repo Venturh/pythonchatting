@@ -14,6 +14,8 @@ class Tcp(object):
         self.username = ""
         self.thread = Thread(target=self.receive)
         self.run = True
+        self.thread.start()
+
 
     def send(self, msg):
         print("Send:" + msg)
@@ -35,10 +37,12 @@ class Tcp(object):
         elif received == "12\n":
             self.username = self.client.gui.login_user_msg.get()
             pw_msg = "LoginP" + self.client.gui.login_pw_msg.get()
+            pw_hash_msg = "LoginP" + self.client.hashPw(self.client.gui.register_pw_msg.get())
             self.send(pw_msg)
         elif received == "13\n":
             self.username = self.client.gui.register_user_msg.get()
             pw_msg = "RegP" + self.client.gui.register_pw_msg.get()
+            pw_hash_msg = "RegP" + self.client.hashPw(self.client.gui.register_pw_msg.get())
             self.send(pw_msg)
         elif received == "14\n":
             self.complete_tcp()
@@ -58,15 +62,21 @@ class Tcp(object):
             self.client.gui.login_user_msg.set("")
             self.client.gui.login_pw_msg.set("")
             self.client.gui.info_label_msg.set("Falsches Passwort")
-        elif received == "00\n":
-            #self.client.gui.chatrequest_window.deiconify()
+
+        elif received.startswith("30"):
+            self.client.gui.chatrequest_window.deiconify()
+            chatanswer = received.replace("\n", "").split("*")
+            self.client.udp.setConnection(chatanswer[1], chatanswer[2])
+        elif received == "0\n":
+            print("Chat abgelehnt")
+            self.client.gui.show_chatrefused()
+        elif received == "1\n":
+            self.client.udp.setConnection(self.client.udpServer.name, self.client.udpServer.port)
+            self.client.udp.connect()
             self.client.gui.show_chat_window()
-        elif received == "ChatAnfrage erhalten\n":
-            #self.client.gui.chatrequest_window.deiconify()
+            print("Chat angenommen")
             self.client.gui.show_chat_window()
-        elif received == "ChatAnfrageAntwort erhalten\n":
-            #self.client.gui.chatrequest_window.deiconify()
-            self.client.gui.show_chat_window()
+
 
 
 
@@ -87,10 +97,14 @@ class Tcp(object):
         self.send("10")
 
     def send_chatrequest(self):
-        # print("Chatanfage an: "+self.client.chatPartner)
-        self.send("Chat" + self.client.chatPartner)
+        print("Chat" + self.client.chatPartner + "*" + str(self.client.udp.serverName) + "*" + str(self.client.udp.serverPort))
+        self.send("Chat" + self.client.chatPartner + "*" + str(self.client.udp.serverName) + "*" + str(self.client.udp.serverPort))
 
     def send_chatanswer(self,answer):
         print(answer)
+        if answer == "1":
+            self.client.udp.connect()
+            self.client.gui.show_chat_window()
+        self.client.gui.chatrequest_window.withdraw()
         self.send(answer)
         return

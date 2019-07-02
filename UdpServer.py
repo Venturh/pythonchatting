@@ -6,15 +6,16 @@ from threading import Thread
 class UdpServer:
 
     def __init__(self, client):
-        #self.port = self.generatePort()
+        self.port = self.generatePort()
         self.client = client
         self.name = "localhost"
-        self.port = 12000
+        #self.port = 12000
         self.socket = socket(AF_INET, SOCK_DGRAM)
         self.socket.bind(("", self.port))
         self.clients = []
         self.messages = []
         self.udpserver_thread = Thread(target=self.handle)
+        self.udpserver_thread.start()
         print("UDP Server läuft mit Port: " + str(self.port))
 
     def generatePort(self):
@@ -42,7 +43,6 @@ class UdpServer:
 
     def handle(self):
         while 1:
-            print("läuft")
             try:
                 msg, clientAddress = self.socket.recvfrom(2048)
                 user, message, seq = self.client.udp.decode_split(msg)

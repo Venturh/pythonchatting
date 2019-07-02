@@ -1,5 +1,6 @@
 from tkinter import *
 from threading import Thread
+import queue as queue
 import sys
 
 
@@ -58,12 +59,22 @@ class Gui(object):
         self.userlist_refresh_btn.pack()
 
         self.chatrequest_window = Toplevel()
-        self.chatrequest_window.geometry("%dx%d%+d%+d" % (50, 50, 800, 200))
-        self.chatrequest_accept_btn = Button(self.chatrequest_window, text="Accept", command=lambda: self.client.tcp.send_chatanswer("accept"))
-        self.chatrequest_decline_btn = Button(self.chatrequest_window, text="Decline", command=lambda: self.client.tcp.send_chatanswer("decline"))
+        self.chatrequest_window.geometry("%dx%d%+d%+d" % (100, 100, 800, 200))
+        self.chat_request_label = Label(self.chatrequest_window, text="You got a chat request")
+        self.chatrequest_accept_btn = Button(self.chatrequest_window, text="Accept", command=lambda: self.client.tcp.send_chatanswer("1"))
+        self.chatrequest_decline_btn = Button(self.chatrequest_window, text="Decline", command=lambda: self.client.tcp.send_chatanswer("0"))
+        self.chat_request_label.pack()
         self.chatrequest_accept_btn.pack()
         self.chatrequest_decline_btn.pack()
         self.chatrequest_window.withdraw()
+
+        self.chat_refused_window = Toplevel()
+        self.chat_refused_window.geometry("%dx%d%+d%+d" % (200, 100, 1000, 200))
+        self.chat_refused_label = Label(self.chat_refused_window, text="Your chatrequest got refused :(")
+        self.chatrefused_accept_btn = Button(self.chat_refused_window, text="ok", command=lambda: self.chat_refused_window.withdraw())
+        self.chat_refused_label.pack()
+        self.chatrefused_accept_btn.pack()
+        self.chat_refused_window.withdraw()
 
         self.chat_window = Toplevel()
         self.chat_window.geometry("%dx%d%+d%+d" % (800, 600, 800, 200))
@@ -90,6 +101,9 @@ class Gui(object):
 
         self.login_user_msg.set("Max")
         self.login_pw_msg.set("hallo")
+
+        self.queue = queue.Queue()
+        self.queue_check()
 
 
     def register(self):
@@ -133,6 +147,22 @@ class Gui(object):
         self.chatrequest_window.destroy()
         self.root.destroy()
         test.join()
+
+    def queue_check(self):
+        try:
+            msg = str(self.queue.get_nowait())
+            print("updated gui")
+            self.update_msg_list(msg)
+        except queue.Empty:
+            pass
+        finally:
+            self.root.after(100, self.queue_check)
+
+    def show_chatrefused(self):
+        self.chat_refused_window.deiconify()
+
+
+
 
 
 

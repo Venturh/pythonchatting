@@ -6,15 +6,16 @@ from threading import Thread
 class UdpServer:
 
     def __init__(self, client):
-        #self.port = self.generatePort()
+        self.port = self.generatePort()
         self.client = client
         self.name = "localhost"
-        self.port = 12001
+        #self.port = 12000
         self.socket = socket(AF_INET, SOCK_DGRAM)
         self.socket.bind(("", self.port))
         self.clients = []
         self.messages = []
-        self.udpserver_thread = Thread(target=self.handle).start()
+        self.udpserver_thread = Thread(target=self.handle)
+        self.udpserver_thread.start()
         print("UDP Server läuft mit Port: " + str(self.port))
 
     def generatePort(self):
@@ -29,30 +30,47 @@ class UdpServer:
         except timeout as err:
             print(err)
             self.send(msg,int(seq)+1)
-        finally:
-            self.socket.settimeout(None);
+
+    def broadcast(self, user, message):
+        for c in self.clients:
+            print(str(c))
+            self.send(user, message, 0, c)
+
+    def close(self):
+        print("Server geschlossen")
+
+
 
     def handle(self):
         while 1:
-            msg, clientAddress = self.socket.recvfrom(2048)
-            user, message, seq = self.client.udp.decode_split(msg)
-            self.messages.append((user, message, seq))
-            print("Seq: "+seq)
-            if int(seq) > 0:
-                for u, m, s in self.messages:
-                    if s < int(seq) and message == m:
-                        print("Duplikat")
-                        self.messages.remove((u, m, s))
-                        #muss noch gesendet werden oder nicht?
-                        #self.send(user, "duplikat, 0, c")
+            try:
+                msg, clientAddress = self.socket.recvfrom(2048)
+                user, message, seq = self.client.udp.decode_split(msg)
+                self.messages.append((user, message, seq))
+                print("Seq: " + seq)
+                if int(seq) > 0:
+                    seqMin = 0
+                    for u, m, s in self.messages:
+                        if u == user and message == m and s <= seqMin:
+                            seqMin = s
+                    for u, m, s in self.messages:
+                        if s > seqMin:
+                            self.messages.remove((u, m, s))
+                            print("Duplikat")
+                            return
 
-            if message == "connect":
-                if clientAddress not in self.clients:
-                    self.clients.append(clientAddress)
-            else:
-                for c in self.clients:
-                    print(str(c))
-                    self.send(user, message, 0, c)
+                if message == "connect":
+                    if clientAddress not in self.clients:
+                        self.clients.append(clientAddress)
+                elif message == "disconnect":
+                    if clientAddress in self.clients:
+                        self.clients.remove(clientAddress)
+                        self.broadcast(user, message)
+                else:
+                    self.broadcast(user, message)
+
+            except timeout:
+                continue
 
 
 

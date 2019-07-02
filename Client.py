@@ -3,7 +3,7 @@ from Gui import Gui
 from UdpServer import UdpServer
 from Udp import Udp
 from Tcp import Tcp
-from threading import *
+import hashlib
 
 # BUGS:
 
@@ -13,9 +13,14 @@ class Client(object):
     def __init__(self):
         self.gui = Gui(self)
         self.tcp = Tcp("localhost", 27999, self)
-        self.udp = Udp(self)
         self.udpServer = UdpServer(self)
+        self.udp = Udp(self, self.udpServer)
         self.chatPartner = "";
+
+
+    def hashPw(self, toHash):
+        print(hashlib.sha256(toHash.encode('utf-8')).hexdigest())
+        return hashlib.sha256(toHash.encode('utf-8')).hexdigest()
 
     def send_udp_txt(self, event=None):
         msg = self.gui.s_msg.get()
@@ -30,7 +35,7 @@ class Client(object):
         self.chatPartner = choosed;
         print(choosed)
         self.tcp.send_chatrequest()
-        self.udp.connect()
+
 
     def quit(self):
         self.tcp.thread.join()
@@ -43,9 +48,7 @@ class Client(object):
 
 if __name__ == "__main__":
     client = Client()
-    client.tcp.thread.start()
-    client.udp.thread.start()
-    client.udpServer.udpserver_thread.start()
+    client.hashPw("hallo")
     mainloop()
 
 

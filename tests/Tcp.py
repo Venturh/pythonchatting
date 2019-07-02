@@ -1,3 +1,4 @@
+import hashlib
 from socket import AF_INET, socket, SOCK_STREAM, SOCK_DGRAM
 from threading import Thread
 
@@ -11,14 +12,17 @@ class Tcp(object):
         self.socket = socket(AF_INET, SOCK_STREAM)
         self.socket.connect((self.serverName, self.serverPort))
         self.username = ""
-        self.thread = Thread(target=self.receive).start()
+        self.thread = Thread(target=self.receive)
+        self.run = True
+        self.thread.start()
+
 
     def send(self, msg):
         print("Send:" + msg)
         self.socket.send(bytes(msg + "\n", "utf-8"))
 
     def receive(self):
-        while 1:
+        while self.run:
             received = self.socket.recv(1024).decode("utf-8")
             self.handle(received)
 
@@ -56,8 +60,22 @@ class Tcp(object):
             self.client.gui.login_user_msg.set("")
             self.client.gui.login_pw_msg.set("")
             self.client.gui.info_label_msg.set("Falsches Passwort")
-        elif received == "00\n":
+
+        elif received.startswith("30"):
             self.client.gui.chatrequest_window.deiconify()
+            chatanswer = received.replace("\n", "").split("*")
+            self.client.udp.setConnection(chatanswer[1], chatanswer[2])
+        elif received == "0\n":
+            print("Chat abgelehnt")
+            self.client.gui.show_chatrefused()
+        elif received == "1\n":
+            self.client.udp.setConnection(self.client.udpServer.name, self.client.udpServer.port)
+            self.client.udp.connect()
+            self.client.gui.show_chat_window()
+            print("Chat angenommen")
+            self.client.gui.show_chat_window()
+
+
 
 
     def register(self, event=None):
@@ -77,10 +95,14 @@ class Tcp(object):
         self.send("10")
 
     def send_chatrequest(self):
-        # print("Chatanfage an: "+self.client.chatPartner)
-        self.send("Chat" + self.client.chatPartner)
+        print("Chat" + self.client.chatPartner + "*" + str(self.client.udp.serverName) + "*" + str(self.client.udp.serverPort))
+        self.send("Chat" + self.client.chatPartner + "*" + str(self.client.udp.serverName) + "*" + str(self.client.udp.serverPort))
 
     def send_chatanswer(self,answer):
         print(answer)
+        if answer == "1":
+            self.client.udp.connect()
+            self.client.gui.show_chat_window()
+        self.client.gui.chatrequest_window.withdraw()
         self.send(answer)
         return
