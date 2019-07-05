@@ -1,5 +1,6 @@
 from socket import *
-from threading import Thread
+import  threading
+
 
 
 class Udp(object):
@@ -9,18 +10,16 @@ class Udp(object):
         self.serverName = udpServer.name
         self.serverPort = udpServer.port
         self.clientSocket = None
-
         self.partnerAdress = ("", 0)
         self.messages = []
-        self.thread = Thread(target=self.receive)
-        self.run = True
+        self.pill2kill = threading.Event()
+        self.thread = threading.Thread(target=self.receive, args=(self.pill2kill, "task"))
 
 
 
 
 
     def send(self, msg, seq):
-        print("IP+Port: " + self.serverName + "+" + str(self.serverPort))
         self.clientSocket.settimeout(2.0);
         message = bytes(self.client.tcp.username + ": " + ":|:" + msg + ":|:" + str(seq), "utf-8")
         try:
@@ -36,25 +35,29 @@ class Udp(object):
     def disconnect(self):
         self.clientSocket.settimeout(2.0);
         self.send("disconnect", 0)
-        self.run = False
         if self.thread.is_alive():
+            self.pill2kill.set()
             self.thread.join()
         self.clientSocket.close()
 
-
-
     def setConnection(self, ip, port):
+
+        if self.pill2kill:
+            self.pill2kill.clear()
+        print("2KillSet: " + str(self.pill2kill.isSet()))
+
         self.clientSocket = socket(AF_INET, SOCK_DGRAM)
         self.serverName = ip
         self.serverPort = port
         self.clientSocket.connect((self.serverName, int(self.serverPort)))
+        self.thread = threading.Thread(target=self.receive, args=(self.pill2kill, "task"))
         self.thread.start()
         print("Connected to:" + self.serverName + str(self.serverPort))
 
-    def receive(self, ):
-        while self.run:
+    def receive(self, stop_event, arg ):
+        while not stop_event.wait(1):
             try:
-                print(self.run)
+
                 msg, clientAddress = self.clientSocket.recvfrom(2048)
                 user, message, seq = self.decode_split(msg)
                 self.messages.append((user, message, seq))
@@ -94,18 +97,7 @@ class Udp(object):
     def close(self):
         self.clientSocket.close()
 
-    def saveAndQuit(self):
-        self.running = False
-        self.trackingThread.join(timeout=0.05)
-        # if thread is still alive, return control to the Qt event loop
-        # and rerun this function in 50 milliseconds
-        if self.thread.is_alive():
-            QTimer.singleShot(50, self.saveAndQuit)
-            return
-        # if the thread has ended, then save and quit!
-        else:
-            self.save()
-            QApplication.instance().quit()
+
 
 
 

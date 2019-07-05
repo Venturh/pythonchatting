@@ -78,6 +78,7 @@ class Tcp(object):
 
 
 
+
     def register(self, event=None):
         user_msg = "RegU" + self.client.gui.register_user_msg.get()
         self.send(user_msg)

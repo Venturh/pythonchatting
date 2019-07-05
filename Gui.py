@@ -136,6 +136,7 @@ class Gui(object):
     def hide_chat_window(self):
         self.client.udp.disconnect()
         self.msg_list.delete(0, END)
+        self.client.tcp.send("31");
         self.root.deiconify()
         self.chat_window.withdraw()
 

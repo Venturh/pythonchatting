@@ -47,7 +47,7 @@ class UdpServer:
                 msg, clientAddress = self.socket.recvfrom(2048)
                 user, message, seq = self.client.udp.decode_split(msg)
                 self.messages.append((user, message, seq))
-                print("Seq: " + seq)
+                print(message)
                 if int(seq) > 0:
                     seqMin = 0
                     for u, m, s in self.messages:
