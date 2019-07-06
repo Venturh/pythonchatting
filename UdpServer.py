@@ -19,8 +19,7 @@ class UdpServer:
         print("UDP Server läuft mit Port: " + str(self.port))
 
     def generatePort(self):
-        # port numbers between 49152 to 65535
-        return 49152 + random.randrange(15000)
+        return 4900 + random.randrange(2000)
 
     def send(self, user, msg, seq, c):
         self.socket.settimeout(2.0);
@@ -59,7 +58,7 @@ class UdpServer:
                             print("Duplikat")
                             return
 
-                if message == "connect":
+                if message == "connect" or message == "connect\n" :
                     if clientAddress not in self.clients:
                         self.clients.append(clientAddress)
                 elif message == "disconnect":

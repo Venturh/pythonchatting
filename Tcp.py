@@ -72,10 +72,8 @@ class Tcp(object):
             self.client.gui.show_chatrefused()
         elif received == "1\n":
             self.client.udp.setConnection(self.client.udpServer.name, self.client.udpServer.port)
-            self.client.udp.connect()
             self.client.gui.show_chat_window()
             print("Chat angenommen")
-            self.client.gui.show_chat_window()
 
 
 
@@ -95,7 +93,7 @@ class Tcp(object):
         self.users_list()
 
     def users_list(self):
-        self.send("10")
+        self.send("list")
 
     def send_chatrequest(self):
         print("Chat" + self.client.chatPartner + "*" + str(self.client.udp.serverName) + "*" + str(self.client.udp.serverPort))

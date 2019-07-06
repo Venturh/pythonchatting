@@ -21,6 +21,7 @@ class Udp(object):
 
     def send(self, msg, seq):
         self.clientSocket.settimeout(2.0);
+        print("Client sendet :" + msg + "an:" + self.serverName + str(self.serverPort))
         message = bytes(self.client.tcp.username + ": " + ":|:" + msg + ":|:" + str(seq), "utf-8")
         try:
             self.clientSocket.sendto(message, (self.serverName, int(self.serverPort)))
@@ -45,11 +46,11 @@ class Udp(object):
         if self.pill2kill:
             self.pill2kill.clear()
         print("2KillSet: " + str(self.pill2kill.isSet()))
-
         self.clientSocket = socket(AF_INET, SOCK_DGRAM)
+        self.connect()
         self.serverName = ip
         self.serverPort = port
-        self.clientSocket.connect((self.serverName, int(self.serverPort)))
+
         self.thread = threading.Thread(target=self.receive, args=(self.pill2kill, "task"))
         self.thread.start()
         print("Connected to:" + self.serverName + str(self.serverPort))

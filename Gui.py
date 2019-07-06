@@ -151,9 +151,10 @@ class Gui(object):
 
     def queue_check(self):
         try:
-            msg = str(self.queue.get_nowait())
+            item = str(self.queue.get_nowait())
+            print("Queue"+ item)
             print("updated gui")
-            self.update_msg_list(msg)
+            self.update_msg_list(item)
         except queue.Empty:
             pass
         finally:
