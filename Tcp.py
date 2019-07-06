@@ -66,6 +66,10 @@ class Tcp(object):
         elif received.startswith("30"):
             self.client.gui.chatrequest_window.deiconify()
             chatanswer = received.replace("\n", "").split("*")
+            if "/" in chatanswer[1]:
+                print("ja")
+                ipsplit = chatanswer[1].split("/")
+                chatanswer[1] = ipsplit[0]
             self.client.udp.setConnection(chatanswer[1], chatanswer[2])
         elif received == "0\n":
             print("Chat abgelehnt")
@@ -102,7 +106,6 @@ class Tcp(object):
     def send_chatanswer(self,answer):
         print(answer)
         if answer == "1":
-            self.client.udp.connect()
             self.client.gui.show_chat_window()
         self.client.gui.chatrequest_window.withdraw()
         self.send(answer)

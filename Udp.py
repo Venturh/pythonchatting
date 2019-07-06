@@ -42,18 +42,19 @@ class Udp(object):
         self.clientSocket.close()
 
     def setConnection(self, ip, port):
-
+        self.serverName = ip
+        self.serverPort = port
+        print("Connected to:" + self.serverName + str(self.serverPort))
         if self.pill2kill:
             self.pill2kill.clear()
         print("2KillSet: " + str(self.pill2kill.isSet()))
         self.clientSocket = socket(AF_INET, SOCK_DGRAM)
         self.connect()
-        self.serverName = ip
-        self.serverPort = port
+
 
         self.thread = threading.Thread(target=self.receive, args=(self.pill2kill, "task"))
         self.thread.start()
-        print("Connected to:" + self.serverName + str(self.serverPort))
+
 
     def receive(self, stop_event, arg ):
         while not stop_event.wait(1):
