@@ -9,11 +9,11 @@ class UdpServer:
         self.port = self.generatePort()
         self.client = client
         self.name = "localhost"
-        #self.port = 12000
         self.socket = socket(AF_INET, SOCK_DGRAM)
         self.socket.bind(("", self.port))
         self.clients = []
-        self.messages = []
+        self.seqnumber = 0
+        self.seqnumbers = []
         self.udpserver_thread = Thread(target=self.handle)
         self.udpserver_thread.start()
         print("UDP Server läuft mit Port: " + str(self.port))
@@ -21,44 +21,38 @@ class UdpServer:
     def generatePort(self):
         return 4900 + random.randrange(2000)
 
-    def send(self, user, msg, seq, c):
+    def send(self, user, msg, c):
         self.socket.settimeout(2.0);
-        message = bytes(user + ":|:" + msg + ":|:" + str(seq), "utf-8")
+        message = bytes(user + ":|:" + msg + ":|:" + str(int(self.seqnumber)), "utf-8")
         try:
             self.socket.sendto(message, c)
         except timeout as err:
             print(err)
-            self.send(msg,int(seq)+1)
+            self.send(user, msg, c)
+        finally:
+            print("Server send:" + user + " " + msg + " " + str(self.seqnumber))
 
     def broadcast(self, user, message):
+        self.seqnumber += 1
         for c in self.clients:
             print(str(c))
-            self.send(user, message, 0, c)
+            self.send(user, message, c)
 
     def close(self):
         print("Server geschlossen")
-
-
 
     def handle(self):
         while 1:
             try:
                 msg, clientAddress = self.socket.recvfrom(2048)
                 user, message, seq = self.client.udp.decode_split(msg)
-                self.messages.append((user, message, seq))
-                print(message)
-                if int(seq) > 0:
-                    seqMin = 0
-                    for u, m, s in self.messages:
-                        if u == user and message == m and s <= seqMin:
-                            seqMin = s
-                    for u, m, s in self.messages:
-                        if s > seqMin:
-                            self.messages.remove((u, m, s))
-                            print("Duplikat")
-                            return
-
-                if message == "connect" or message == "connect\n" :
+                print("Server received:" + user + " " + message + " " + seq)
+                for s in self.seqnumbers:
+                    if s == seq:
+                        print("Duplikat")
+                        continue
+                self.seqnumbers.append(seq)
+                if message == "connect" or message == "connect\n":
                     if clientAddress not in self.clients:
                         self.clients.append(clientAddress)
                 elif message == "disconnect":

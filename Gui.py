@@ -117,7 +117,6 @@ class Gui(object):
         self.client.tcp.users_list()
 
     def update_msg_list(self, msg):
-        print(len(msg))
         m = 125
         if len(msg) >= m:
             message = [msg[i: i + m] for i in range(0, len(msg), m)]
@@ -152,7 +151,6 @@ class Gui(object):
     def queue_check(self):
         try:
             item = str(self.queue.get_nowait())
-            print("Queue"+ item)
             print("updated gui")
             self.update_msg_list(item)
         except queue.Empty:

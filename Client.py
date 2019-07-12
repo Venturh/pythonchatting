@@ -19,13 +19,13 @@ class Client(object):
 
 
     def hashPw(self, toHash):
-        print(hashlib.sha256(toHash.encode('utf-8')).hexdigest())
+        #print(hashlib.sha256(toHash.encode('utf-8')).hexdigest())
         return hashlib.sha256(toHash.encode('utf-8')).hexdigest()
 
     def send_udp_txt(self, event=None):
         msg = self.gui.s_msg.get()
         self.gui.s_msg.set("")
-        self.udp.send(msg, 0)
+        self.udp.send(msg)
 
 
     def choose_chat(self):

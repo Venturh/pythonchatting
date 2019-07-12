@@ -11,31 +11,30 @@ class Udp(object):
         self.serverPort = udpServer.port
         self.clientSocket = None
         self.partnerAdress = ("", 0)
-        self.messages = []
+        self.seqnumber = 0
+        self.seqnumbers = []
         self.pill2kill = threading.Event()
         self.thread = threading.Thread(target=self.receive, args=(self.pill2kill, "task"))
 
-
-
-
-
-    def send(self, msg, seq):
+    def send(self, msg):
         self.clientSocket.settimeout(2.0);
-        print("Client sendet :" + msg + "an:" + self.serverName + str(self.serverPort))
-        message = bytes(self.client.tcp.username + ": " + ":|:" + msg + ":|:" + str(seq), "utf-8")
+        message = bytes(self.client.tcp.username + ": " + ":|:" + msg + ":|:" + str(self.seqnumber), "utf-8")
         try:
             self.clientSocket.sendto(message, (self.serverName, int(self.serverPort)))
         except timeout as err:
             print(err)
-            self.send(msg, seq + 1)
+            self.send(msg)
+        finally:
+            print("Client send:" + self.client.tcp.username + " " + msg + " " + str(self.seqnumber))
+            self.seqnumber +=1
 
     def connect(self):
         self.clientSocket.settimeout(2.0);
-        self.send("connect", 0)
+        self.send("connect")
 
     def disconnect(self):
         self.clientSocket.settimeout(2.0);
-        self.send("disconnect", 0)
+        self.send("disconnect")
         if self.thread.is_alive():
             self.pill2kill.set()
             self.thread.join()
@@ -47,45 +46,31 @@ class Udp(object):
         print("Connected to:" + self.serverName + str(self.serverPort))
         if self.pill2kill:
             self.pill2kill.clear()
-        print("2KillSet: " + str(self.pill2kill.isSet()))
         self.clientSocket = socket(AF_INET, SOCK_DGRAM)
         self.connect()
-
-
         self.thread = threading.Thread(target=self.receive, args=(self.pill2kill, "task"))
         self.thread.start()
-
 
     def receive(self, stop_event, arg ):
         while not stop_event.wait(1):
             try:
-
                 msg, clientAddress = self.clientSocket.recvfrom(2048)
                 user, message, seq = self.decode_split(msg)
-                self.messages.append((user, message, seq))
-                print(message)
-                print("Seq: " + seq)
-                if int(seq) > 0:
-                    seqMin = 0
-                    for u, m, s in self.messages:
-                        if u == user and message == m and s <= seqMin:
-                            seqMin = s
-                    for u, m, s in self.messages:
-                        if s > seqMin:
-                            self.messages.remove((u, m, s))
-                            print("Duplikat")
-                            return
+                print("Client received:" + user + " " + message + " " + seq)
+                for s in self.seqnumbers:
+                    if s == seq:
+                        print("duplikat")
+                        continue
+                self.seqnumbers.append(seq)
                 if message == "disconnect":
-                    self.client.gui.update_msg_list("Dein Chatpartner " + user + "hat den Chat verlassen")
+                    self.client.gui.queue.put(user + "hat den Chat verlassen")
                 else:
-                    #self.client.gui.update_msg_list(user + message)
                     self.client.gui.queue.put(user + message)
 
             except timeout:
-                continue;
+                continue
 
-
-    def decode_split(self,msg):
+    def decode_split(self, msg):
         message = str(msg, "utf-8")
         message = message.split(":|:")
         user = message[0]
